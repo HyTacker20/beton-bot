@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "beton-bot"
+version = "0.0.1"
+authors = [
+    { name = "Andrii Hermak", email = "hermak20102004@gmail.com" },
+]
+description = "Telegram Bot"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "adaptix>=3.0.0a5",
+    "pytelegrambotapi>=4.13.0",
+    "redis>=5.0.0",
+    "toml>=0.10.2"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+
+[project.urls]
+"Homepage" = "https://github.com/Cub11k/tgBotTemplate"
+
+[project.scripts]
+launch-polling = "mypackage:main"

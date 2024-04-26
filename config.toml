@@ -1,6 +1,6 @@
 [bot]
-owner_tg_id = 123456789
-token = "token"
+owner_tg_id = 707897264
+token = "6337520873:AAEgKeJ26oKH9DEk3lrqT85C_d8IsRw-s-Q"
 drop_pending = true
 use_webhook = false
 use_class_middlewares = true
