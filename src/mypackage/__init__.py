@@ -1,10 +1,15 @@
 import os
 
+from dotenv import load_dotenv
+
 from .bot import setup_bot, launch_bot
 from .cli import define_arg_parser
 from .config import load_config
 from .logger import setup_logger
 from .webhook import setup_app, Application
+
+
+load_dotenv()
 
 
 def webhook_app() -> Application:
@@ -35,7 +40,9 @@ def main():
     config_path = os.environ.get('CONFIG_PATH', args.config_path)
     use_env_vars = os.environ.get('CONFIG_USE_ENV_VARS', args.use_env_vars) in ('1', 'true', 'True', 'TRUE', True)
     config_env_mapping_path = os.environ.get('CONFIG_ENV_MAPPING_PATH', args.config_env_mapping_path)
+    bot_token = os.environ.get('TOKEN')
     cfg = load_config(config_path, use_env_vars, config_env_mapping_path)
+    cfg.bot.token = bot_token
     bot_logger = setup_logger(cfg.bot.logger)
     bot_ = setup_bot(cfg.bot, cfg.messages, cfg.buttons, bot_logger)
     # use_webhook is intentionally hard-coded to False here as we're using long polling
