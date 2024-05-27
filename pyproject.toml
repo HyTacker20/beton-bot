@@ -12,7 +12,7 @@ adaptix = "^3.0.0b5"
 pytelegrambotapi = "^4.17.0"
 redis = "^5.0.4"
 toml = "^0.10.2"
-setuptools = "^69.5.1"
+setuptools = "^70.0.0"
 
 
 [build-system]
