@@ -10,6 +10,8 @@ python-dotenv = "*"
 alembic = "*"
 googlemaps = "*"
 gspread = "*"
+adaptix = "*"
+redis = "*"
 
 [dev-packages]
 
