@@ -3,9 +3,11 @@ from logging import Logger
 from telebot import TeleBot
 from telebot.types import Message
 
-from ...config.models import MessagesConfig, ButtonsConfig
-
 from .. import keyboards
+from ..texts.main_menu import welcome_message
+from ...config.models import MessagesConfig, ButtonsConfig
+from ...db import DBAdapter, DBError
+from ...db.dto import NewUserDTO
 
 
 # Basic commands
@@ -19,10 +21,51 @@ def start_handler(
         bot: TeleBot,
         messages: MessagesConfig,
         buttons: ButtonsConfig,
+        db_adapter: DBAdapter,
         logger: Logger,
         **kwargs):
     logger.debug(f"User {message.from_user.id} @{message.from_user.username} started the bot")
-    bot.send_message(message.chat.id, messages.welcome, reply_markup=keyboards.help_reply_keyboard(buttons.help))
+
+    # bot.set_state(message.from_user.id, UnregisteredStates.started, message.chat.id)
+
+    try:
+        user = db_adapter.get_user(message.from_user.id)
+
+    except DBError as e:
+        logger.error(e)
+        bot.send_message(message.chat.id, messages.unknown_error)
+        return
+
+    else:
+        if user is None:
+            print("user not found")
+            try:
+                new_user_dto = NewUserDTO.from_tg_message(message)
+
+                user_added = db_adapter.add_user(new_user_dto)
+
+            except DBError as e:
+                logger.error(e)
+                bot.send_message(message.chat.id, messages.unknown_error)
+                return
+
+            else:
+                if user_added is False:
+                    logger.error(
+                        f'Constraints violation while adding telegram account:'
+                        f' {message.from_user.id}, {message.chat.id}, {message.from_user.username}'
+                    )
+                    bot.send_message(message.chat.id, messages.add_tg_account_error)
+                    return
+                else:
+                    logger.debug(
+                        f'User added:'
+                        f'{message.from_user.first_name} {message.from_user.id}, '
+                        f'{message.chat.id}, {message.from_user.username}'
+                    )
+
+        bot.send_message(message.chat.id, welcome_message,
+                         reply_markup=keyboards.main_menu_keyboard(user.is_admin if user else False))
 
 
 def help_handler(

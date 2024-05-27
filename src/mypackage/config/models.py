@@ -39,6 +39,7 @@ class BotWebhookConfig:
 @dataclass
 class BotConfig:
     owner_tg_id: int  # Bot owner telegram id
+    admins: list
     token: str  # Telegram bot token
     drop_pending: bool  # Drop pending updates on startup
     use_webhook: bool  # Use webhook, otherwise long polling
@@ -53,11 +54,31 @@ class BotConfig:
 
 
 @dataclass
+class DBConfig:
+    host: str  # DBMS host
+    port: int  # DBMS port
+    user: str  # DBMS user
+    password: str  # DBMS user password
+    database: str  # Database name
+    logger: LoggerConfig  # Logger config for database
+
+
+@dataclass
+class GoogleSheetAPIConfig:
+    db_adapter: str
+    refresh_time: int
+    json_url: str
+    sheet_url: str
+
+
+@dataclass
 class MessagesConfig:
     welcome: str
     help: str
     anti_flood: str
     unknown_update: str
+    unknown_error: str
+    add_tg_account_error: str
 
 
 @dataclass
@@ -72,3 +93,5 @@ class Config:
     logger: LoggerConfig  # Logger config for the app
     messages: MessagesConfig  # Messages text config
     buttons: ButtonsConfig  # Buttons text config
+    db: DBConfig
+    google_sheet_api: GoogleSheetAPIConfig

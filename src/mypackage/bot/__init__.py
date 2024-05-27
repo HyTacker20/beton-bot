@@ -2,14 +2,18 @@ import logging
 import time
 from typing import Optional
 
+from sqlalchemy.orm import sessionmaker
 from telebot import TeleBot
 
+from .api.google_maps_api import GoogleMapsAPI
+from .api.google_sheet_api import GoogleSheetAPI
 from ..config.models import BotConfig, BotWebhookConfig, MessagesConfig, ButtonsConfig
 
 from .filters import add_custom_filters
 from .handlers import register_handlers
 from .middlewares import setup_middlewares
 from .states.storage import setup_state_storage
+from ..db import DBAdapter
 
 
 def launch_bot(bot: TeleBot,
@@ -54,16 +58,24 @@ def stop_bot(bot: TeleBot, use_webhook: bool):
 
 def setup_bot(
         bot_config: BotConfig,
+        db_session_maker: sessionmaker,
+        db_logger: logging.Logger,
+        google_sheet_api: GoogleSheetAPI,
+        google_maps_api: GoogleMapsAPI,
         messages: MessagesConfig,
         buttons: ButtonsConfig,
         logger: logging.Logger):
     state_storage = setup_state_storage(bot_config.state_storage)
     bot = TeleBot(bot_config.token, state_storage=state_storage, use_class_middlewares=bot_config.use_class_middlewares)
 
-    add_custom_filters(bot, bot_config.owner_tg_id)
+    add_custom_filters(bot, bot_config.owner_tg_id, bot_config.admins)
     if bot_config.use_class_middlewares:
         setup_middlewares(
             bot=bot,
+            db_session_maker=db_session_maker,
+            db_logger=db_logger,
+            google_sheet_api=google_sheet_api,
+            google_maps_api=google_maps_api,
             timeout_message=messages.anti_flood,
             timeout=bot_config.actions_timeout,
             messages=messages,
@@ -71,6 +83,6 @@ def setup_bot(
             logger=logger,
             page_size=bot_config.page_size
         )
-    register_handlers(bot, buttons)
+        register_handlers(bot, buttons)
 
     return bot

@@ -160,3 +160,9 @@ cython_debug/
 .idea/
 
 config.toml
+beton-bot-test-2af7167272a4.json
+distance_result.json
+geocode_result.json
+reverse_geocode_result.json
+users.csv
+*.db

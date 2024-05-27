@@ -1,1 +1,5 @@
-# TODO: define all your states here
+from telebot.handler_backends import StatesGroup, State
+
+
+class UnregisteredStates(StatesGroup):
+    started = State()

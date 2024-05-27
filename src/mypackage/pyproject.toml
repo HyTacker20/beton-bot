@@ -12,10 +12,11 @@ description = "Telegram Bot"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "adaptix>=3.0.0a5",
+#    "adaptix>=3.0.0a5",
     "pytelegrambotapi>=4.13.0",
-    "redis>=5.0.0",
-    "toml>=0.10.2"
+#    "redis>=5.0.0",
+#    "toml>=0.10.2",
+    "alembic>=1.13.1"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -24,9 +25,6 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-
-[project.urls]
-"Homepage" = "https://github.com/Cub11k/tgBotTemplate"
 
 [project.scripts]
 launch-polling = "mypackage:main"

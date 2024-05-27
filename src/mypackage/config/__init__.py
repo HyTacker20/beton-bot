@@ -117,7 +117,7 @@ def parse_config_file(config_path: str) -> dict:
         raise FileNotFoundError(f"File '{config_path}' does not exist or is not accessible.")
 
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding="utf-8") as f:
             return tomllib.loads(f.read())
     except TOMLDecodeError as e:
         raise ValueError(f"Error parsing config file: {e}")

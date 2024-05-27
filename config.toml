@@ -1,5 +1,6 @@
 [bot]
-owner_tg_id = 707897264
+owner_tg_id = 12345678
+admins = [707897264]
 token = "token"
 drop_pending = true
 use_webhook = false
@@ -35,17 +36,39 @@ webhook.secret_token = "secret token"
 # ...
 
 [logger]
-name = "MyAppLogger"
+name = "BetonBotLogger"
 level = "INFO"
 stream = "stdout"
-file_path = "logs/myapp.log"
+file_path = "logs/beton_bot.log"
 format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 [messages]
-welcome = "Welcome message"
+welcome = "Вітаю!"
 help = "Help message"
 anti_flood = "Anti flood message"
 unknown_update = "This feature is not supported yet"
+unknown_error = "Unknown error"
+add_tg_account_error = "Add telegram account error"
 
 [buttons]
 help = "Help"
+
+[db]
+host = ""
+port = 0
+user = ""
+password = ""
+database = ""
+
+logger.name = "DBLogger"
+logger.level = "INFO"
+logger.stream = "stdout"
+logger.file_path = "logs/db.log"
+logger.format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+[google_sheet_api]
+db_adapter = "None"
+refresh_time = 60
+json_url = "beton-bot-test-2af7167272a4.json"
+sheet_url = "https://docs.google.com/spreadsheets/d/1cRO6Vu3jQ954npXRckbqDdDKAvwiDc12IZkjMFNs8gw/edit?usp=sharing"
+
