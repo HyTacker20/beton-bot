@@ -33,6 +33,10 @@ class NewUserDTO:
     tg_user_id: int
     tg_chat_id: int
 
+    is_admin: Optional[bool] = False
+    concrete_discount: Optional[int] = 0
+    delivery_discount: Optional[int] = 0
+
     last_name: Optional[str] = None
     tg_username: Optional[str] = None
 
@@ -60,11 +64,6 @@ class UserDTO(NewUserDTO):
 
     dispatch_point: Optional[DispatchPointDTO] = None
     dispatch_point_id: Optional[int] = None
-
-    concrete_discount: Optional[int] = 0
-    delivery_discount: Optional[int] = 0
-
-    is_admin: Optional[bool] = False
 
     register_time: Optional[datetime] = None
 
