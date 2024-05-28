@@ -1,10 +1,10 @@
-from typing import Optional, Iterable, Tuple, Sequence
 from dataclasses import asdict
+from typing import Optional, Sequence
 
 from sqlalchemy import select, insert, update, Row, func
 from sqlalchemy.orm import Session
 
-from ..dto import UserDTO, NewUserDTO
+from ..dto import NewUserDTO
 from ..models import User
 
 
@@ -13,9 +13,10 @@ def add(session: Session, new_user_dto: NewUserDTO) -> bool:
 
     session.execute(
         insert(User)
-        .values(**asdict(new_user_dto), is_admin=False)
+        .values(**asdict(new_user_dto))
     )
     session.commit()
+
     return True
 
 
