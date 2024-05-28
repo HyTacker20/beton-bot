@@ -1,5 +1,6 @@
 from logging import Logger
 
+from sqlalchemy.exc import IntegrityError
 from telebot import TeleBot
 from telebot.types import Message
 
@@ -43,8 +44,9 @@ def start_handler(
                 new_user_dto = NewUserDTO.from_tg_message(message)
 
                 user_added = db_adapter.add_user(new_user_dto)
+                print(user_added)
 
-            except DBError as e:
+            except (DBError, IntegrityError) as e:
                 logger.error(e)
                 bot.send_message(message.chat.id, messages.unknown_error)
                 return
