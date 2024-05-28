@@ -1,14 +1,13 @@
 import logging
-from typing import Optional, Callable, List, Iterable
+from typing import Optional, Callable, Iterable
 
-from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
 
-from .dto import NewUserDTO, DispatchPointDTO, UserDTO
+from .dto import NewUserDTO, DispatchPointDTO
 from .exceptions import DBError
 from .models import User
-from .operations import user, dispatch_points
+from .operations import user, dispatch_points, database
 
 
 class DBAdapter:
@@ -65,4 +64,5 @@ class DBAdapter:
     def delete_all_dispatch_points(self):
         return self._session_wrapper(dispatch_points.delete_all)
 
-# TODO: планую зробити меню з запам'ятовуванням попереднього вибору точки відправки
+    def check_and_create_tables(self):
+        return self._session_wrapper(database.check_and_create_tables)
