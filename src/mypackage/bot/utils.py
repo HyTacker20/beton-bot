@@ -1,7 +1,8 @@
-from math import floor
+from typing import Optional
 
 from telebot.util import content_type_media, content_type_service
 
+from . import texts
 from ..db.dto import OrderDTO
 
 all_content_types = content_type_media + content_type_service
@@ -74,6 +75,60 @@ def format_order(order_dto: OrderDTO):
         f"- - - - - - - - - - - - - - - - - - - - -\n\n"
         f"<b>Сума:</b> {round(order_dto.concrete_cost + order_dto.delivery_cost, 2)} UAH "
         f"({round((order_dto.concrete_cost + order_dto.delivery_cost) / order_dto.amount, 2)} UAH/м3)\n"
-        )
+    )
+
+    return msg
+
+
+def format_price_with_discount(original_price: float, discount: Optional[float]) -> str:
+    """
+    Formats the price considering the discount.
+
+    Args:
+        original_price (float): The initial price.
+        discount (Optional[float]): The discount percentage.
+
+    Returns:
+        str: The formatted string with the price and discount.
+    """
+    if discount:
+        discounted_price = round(original_price - (original_price * discount / 100), 2)
+        return f"<s>{original_price} UAH</s> <b>{discounted_price} UAH</b> (-{discount}%)"
+    else:
+        return f"<b>{original_price} UAH</b>"
+
+
+def create_order_message(order_dto, google_sheet_api) -> str:
+    """
+    Creates an order message with detailed costs.
+
+    Args:
+        order_dto: The order data transfer object.
+        google_sheet_api: Google Sheet API instance for retrieving delivery price list.
+
+    Returns:
+        str: The formatted order message with details.
+    """
+
+    # Format concrete price
+    concrete_price_msg = format_price_with_discount(order_dto.concrete_cost, order_dto.user.concrete_discount)
+    msg = f"Ціна бетону: <i>{order_dto.amount} m³ × {order_dto.concrete.price}</i> = {concrete_price_msg}\n"
+
+    # Format delivery price
+    delivery_price_msg = format_price_with_discount(order_dto.delivery_cost, order_dto.user.delivery_discount)
+    msg += (f"Ціна доставки: <i>{order_dto.amount if order_dto.amount >= 7 else '7*'} m³ × {order_dto.delivery_price} "
+            f"({int(order_dto.distance.distance_metres / 1000)} km) = </i>{delivery_price_msg}\n")
+
+    # Calculate total cost
+    concrete_cost = round(order_dto.concrete_cost - order_dto.get_concrete_discount(), 2)
+    delivery_cost = round(order_dto.delivery_cost - order_dto.get_delivery_discount(), 2)
+    total_cost = round(concrete_cost + delivery_cost, 2)
+    cost_per_m3 = round((concrete_cost + delivery_cost) / order_dto.amount, 2)
+
+    msg += (f"\n<b>Сума:</b> {concrete_cost} + {delivery_cost} = <b>{total_cost} UAH </b>"
+            f"<i>({cost_per_m3} UAH/м³)</i>\n")
+
+    if order_dto.amount < 7:
+        msg += f"\n<em>*{texts.less_than_7_m3}</em>"
 
     return msg
