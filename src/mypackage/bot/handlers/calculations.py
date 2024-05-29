@@ -300,7 +300,7 @@ def confirm_order(
 
 
 def register_handlers(bot: TeleBot):
-    bot.register_message_handler(get_dispatch_point, commands=['calculate'], pass_bot=True)
+    bot.register_message_handler(get_dispatch_point, commands=['calculate'], is_admin=True, pass_bot=True)
     bot.register_message_handler(refresh, commands=['refresh'], pass_bot=True)
     bot.register_message_handler(get_dispatch_point, text_equals=main_menu.button_1, pass_bot=True)
     bot.register_callback_query_handler(concrete_type_button_handler, func=dummy_true, prefix="type_", pass_bot=True)
