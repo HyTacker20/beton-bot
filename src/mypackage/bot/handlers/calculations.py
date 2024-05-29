@@ -8,7 +8,7 @@ from telebot.types import Message, CallbackQuery
 from .. import texts, keyboards, GoogleMapsAPI
 from ..keyboards import create_inline_keyboard
 from ..texts import main_menu
-from ..utils import dummy_true, calculate_delivery_cost, format_order
+from ..utils import dummy_true, calculate_delivery_cost, format_order, create_order_message
 from ...bot import GoogleSheetAPI
 from ...config.models import ButtonsConfig
 from ...db import DBAdapter
@@ -23,9 +23,10 @@ def refresh(
         message: Message,
         bot: TeleBot,
         google_sheet_api: GoogleSheetAPI):
-    print("refresh dispatch points!")
+    print("refresh data!")
     google_sheet_api.update_dispatch_points()
-    bot.send_message(message.chat.id, "Точки відправлення оновлені!")
+    google_sheet_api.remove_data()
+    bot.send_message(message.chat.id, "Дані оновлені!")
 
 
 def get_dispatch_point(
@@ -213,7 +214,8 @@ def concrete_button_handler(
     user_orders[call.message.chat.id].concrete = current_concrete
 
     msg = f"Ви обрали: <b>{current_concrete.title}</b>\n"
-    msg += f"Ціна за 1 м³: <b>{current_concrete.price} UAH</b>\n"
+    msg += f"Ціна за 1 м³: <b>{round(current_concrete.price + 
+                                     user_orders[call.from_user.id].delivery_price, 2)} UAH</b>\n"
     bot.send_message(call.message.chat.id, msg, parse_mode="HTML",
                      reply_markup=keyboards.remove_reply())
     msg = "Скільки Вам потрібно м³?\nНапишіть число: "
@@ -244,23 +246,11 @@ def get_concrete_amount(
     print(order_dto)
 
     order_dto.concrete_cost = round(order_dto.amount * order_dto.concrete.price, 2)
-    msg = (f"Ціна бетону: <i>{order_dto.amount} m³ × {order_dto.concrete.price}</i> "
-           f"= <b>{order_dto.concrete_cost} UAH</b>\n")
-    msg += (f"Ціна доставки: <i>{order_dto.amount if order_dto.amount >= 7 else '7*'} m³ × {order_dto.delivery_price} "
-            f"({int(order_dto.distance.distance_metres / 1000)} km) = </i>")
-    print(order_dto)
-    print(order_dto.delivery_cost)
     order_dto.delivery_cost = calculate_delivery_cost(price_list=google_sheet_api.get_delivery_price_list(),
                                                       distance=order_dto.distance.distance_metres,
                                                       amount=order_dto.amount)
-    print(order_dto.delivery_cost)
-    msg += f"<b>{order_dto.delivery_cost} UAH</b>\n"
-    msg += (f"\n<b>Сума:</b> {order_dto.concrete_cost} + {order_dto.delivery_cost} = "
-            f"<b>{round(order_dto.concrete_cost + order_dto.delivery_cost, 2)} UAH </b>"
-            f"<i>({round((order_dto.concrete_cost + order_dto.delivery_cost) / order_dto.amount, 2)} UAH/м³)</i>\n")
 
-    if order_dto.amount < 7:
-        msg += f"\n<em>*{texts.less_than_7_m3}</em>"
+    msg = create_order_message(order_dto, google_sheet_api)
 
     bot.send_message(message.chat.id, msg, parse_mode="HTML",
                      reply_markup=create_inline_keyboard(["Замовити"], prefix="order_"))
