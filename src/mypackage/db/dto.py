@@ -133,5 +133,8 @@ class OrderDTO:
     # def subtract_delivery_discount(self, discount: int):
     #     self.delivery_cost -= self.delivery_cost * discount / 100
 
-    def subtract_concrete_discount(self, discount: int):
-        self.concrete_cost -= self.concrete_cost * discount / 100
+    def get_concrete_discount(self):
+        return self.concrete_cost * self.user.concrete_discount / 100
+
+    def get_delivery_discount(self):
+        return self.delivery_cost * self.user.delivery_discount / 100
