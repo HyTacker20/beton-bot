@@ -37,6 +37,10 @@ class GoogleSheetAPI:
         self.get_concrete_data()
         print("google api ready!")
 
+    def remove_data(self):
+        self.concrete_data = None
+        self.delivery_price_data = None
+
     def get_dispatch_points(self) -> set[DispatchPointDTO]:
         worksheet = self.sh.worksheet("dispatch_points")
         data = worksheet.get_all_values()  # get list of lists [["title", x, y], ...]
