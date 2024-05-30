@@ -9,9 +9,11 @@ from ..texts import main_menu, admin_panel
 
 
 # TODO: define all keyboards and/or keyboard builders here or in the submodules of this module
+
+
 def main_menu_keyboard(is_admin: bool = False):
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(KeyboardButton(main_menu.button_1))
+    keyboard.add(KeyboardButton(main_menu.make_calculation_button))
     if is_admin:
         keyboard.add(KeyboardButton(main_menu.admin_button))
     # keyboard.add(KeyboardButton("Кнопка 2"))
@@ -41,6 +43,13 @@ def create_inline_keyboard(buttons_list: Iterable, prefix=""):
     keyboard = InlineKeyboardMarkup()
     for button in buttons_list:
         keyboard.add(InlineKeyboardButton(button, callback_data=prefix + button))
+    return keyboard
+
+
+def create_keyboard(buttons_list: Iterable):
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    for button in buttons_list:
+        keyboard.add(button)
     return keyboard
 
 
