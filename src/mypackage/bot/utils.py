@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 from telebot.util import content_type_media, content_type_service
@@ -98,7 +99,7 @@ def format_price_with_discount(original_price: float, discount: Optional[float])
         return f"<b>{original_price} UAH</b>"
 
 
-def create_order_message(order_dto, google_sheet_api) -> str:
+def create_order_message(order_dto: OrderDTO, google_sheet_api) -> str:
     """
     Creates an order message with detailed costs.
 
@@ -115,9 +116,18 @@ def create_order_message(order_dto, google_sheet_api) -> str:
     msg = f"Ціна бетону: <i>{order_dto.amount} m³ × {order_dto.concrete.price}</i> = {concrete_price_msg}\n"
 
     # Format delivery price
-    delivery_price_msg = format_price_with_discount(order_dto.delivery_cost, order_dto.user.delivery_discount)
-    msg += (f"Ціна доставки: <i>{order_dto.amount if order_dto.amount >= 7 else '7*'} m³ × {order_dto.delivery_price} "
-            f"({int(order_dto.distance.distance_metres / 1000)} km) = </i>{delivery_price_msg}\n")
+    print(order_dto.concrete.type_)
+    if order_dto.concrete.type_ in ["P1", "P2"]:
+        delivery_price_msg = format_price_with_discount(order_dto.delivery_cost, order_dto.user.delivery_discount)
+        msg += (f"Ціна достави*: "
+                f"<i>{int(math.ceil(order_dto.amount / MAX_TRACK_AMOUNT))} × {order_dto.delivery_price} "
+                f"({int(order_dto.distance.distance_metres / 1000)} km)</i> = {delivery_price_msg}\n")
+    else:
+        delivery_price_msg = format_price_with_discount(order_dto.delivery_cost, order_dto.user.delivery_discount)
+        msg += (
+            f"Ціна достави: "
+            f"<i>{order_dto.amount if order_dto.amount >= 7 else '7*'} m³ × {order_dto.delivery_price} </i> "
+            f"({int(order_dto.distance.distance_metres / 1000)} km) = {delivery_price_msg}\n")
 
     # Calculate total cost
     concrete_cost = round(order_dto.concrete_cost - order_dto.get_concrete_discount(), 2)
@@ -125,10 +135,13 @@ def create_order_message(order_dto, google_sheet_api) -> str:
     total_cost = round(concrete_cost + delivery_cost, 2)
     cost_per_m3 = round((concrete_cost + delivery_cost) / order_dto.amount, 2)
 
-    msg += (f"\n<b>Сума:</b> {concrete_cost} + {delivery_cost} = <b>{total_cost} UAH </b>"
+    msg += (f"\n<b>Сума:</b> {concrete_cost} + {delivery_cost} = <b>{total_cost} UAH</b> "
             f"<i>({cost_per_m3} UAH/м³)</i>\n")
 
-    if order_dto.amount < 7:
+    if order_dto.amount < 7 and order_dto.concrete.type_ not in ["P1", "P2"]:
         msg += f"\n<em>*{texts.less_than_7_m3}</em>"
+    else:
+        msg += f"\n<em>*{texts.more_than_one_truck}</em>"
 
     return msg
+

@@ -7,7 +7,7 @@ from telebot.types import Message, CallbackQuery
 
 from .. import texts, keyboards, GoogleMapsAPI
 from ..keyboards import create_inline_keyboard
-from ..texts import main_menu
+from ..texts import main_menu, admin_panel
 from ..utils import dummy_true, calculate_delivery_cost, format_order, create_order_message
 from ...bot import GoogleSheetAPI
 from ...config.models import ButtonsConfig
@@ -47,7 +47,7 @@ def get_dispatch_point(
     order_dto = OrderDTO(user_dto)
 
     bot.send_message(message.chat.id, texts.get_location_message,
-                     reply_markup=keyboards.remove_reply())
+                     reply_markup=keyboards.create_keyboard([main_menu.cancel_button]))
     bot.register_next_step_handler(message, get_user_location, order_dto=order_dto, bot=bot, buttons=buttons,
                                    google_sheet_api=google_sheet_api, google_maps_api=google_maps_api,
                                    db_adapter=db_adapter, logger=logger)
@@ -64,6 +64,11 @@ def get_user_location(
         order_dto: OrderDTO,
         **kwargs):
     print("/get user's location")
+    if message.text == main_menu.cancel_button:
+        bot.send_message(message.chat.id, admin_panel.back_to_main_menu_message,
+                         reply_markup=keyboards.main_menu_keyboard(order_dto.user.is_admin))
+        del user_orders[message.from_user.id]
+        return
 
     if message.text:
         if DEBUG and message.text == ".":
@@ -174,8 +179,8 @@ def concrete_type_button_handler(
         **kwargs):
     prefix = "type_"
 
-    print(call.data)
     concrete_type_title = call.data[len(prefix):]
+    print(concrete_type_title)
 
     msg = f"Категорія <b>{concrete_type_title}</b>.\nЦіна вказана з врахуванням доставки:\n\n"
 
@@ -183,11 +188,14 @@ def concrete_type_button_handler(
 
     current_concrete_type = concrete_data_dto.get_type(concrete_type_title)
 
-    delivery_price_list = google_sheet_api.get_delivery_price_list()
+    concrete_type = concrete_type_title[:2]
+
+    delivery_price_list = google_sheet_api.get_delivery_price_list(concrete_type)
 
     order_dto = user_orders[call.message.chat.id]
 
-    order_dto.delivery_price = calculate_delivery_cost(delivery_price_list, order_dto.distance.distance_metres)
+    order_dto.delivery_price = calculate_delivery_cost(concrete_type, delivery_price_list,
+                                                       order_dto.distance.distance_metres)
 
     for concrete in current_concrete_type.concretes:
         msg += f"{concrete.title} - <b>{round(concrete.price + order_dto.delivery_price, 2)}</b> UAH за м³\n"
@@ -214,7 +222,7 @@ def concrete_button_handler(
     user_orders[call.message.chat.id].concrete = current_concrete
 
     msg = f"Ви обрали: <b>{current_concrete.title}</b>\n"
-    msg += f"Ціна за 1 м³: <b>{round(current_concrete.price + 
+    msg += f"Ціна за 1 м³: <b>{round(current_concrete.price +
                                      user_orders[call.from_user.id].delivery_price, 2)} UAH</b>\n"
     bot.send_message(call.message.chat.id, msg, parse_mode="HTML",
                      reply_markup=keyboards.remove_reply())
@@ -246,9 +254,11 @@ def get_concrete_amount(
     print(order_dto)
 
     order_dto.concrete_cost = round(order_dto.amount * order_dto.concrete.price, 2)
-    order_dto.delivery_cost = calculate_delivery_cost(price_list=google_sheet_api.get_delivery_price_list(),
-                                                      distance=order_dto.distance.distance_metres,
-                                                      amount=order_dto.amount)
+    order_dto.delivery_cost = calculate_delivery_cost(
+        order_dto.concrete.type_,
+        price_list=google_sheet_api.get_delivery_price_list(order_dto.concrete.type_),
+        distance=order_dto.distance.distance_metres,
+        amount=order_dto.amount)
 
     msg = create_order_message(order_dto, google_sheet_api)
 
@@ -302,7 +312,7 @@ def confirm_order(
 def register_handlers(bot: TeleBot):
     bot.register_message_handler(get_dispatch_point, commands=['calculate'], is_admin=True, pass_bot=True)
     bot.register_message_handler(refresh, commands=['refresh'], pass_bot=True)
-    bot.register_message_handler(get_dispatch_point, text_equals=main_menu.button_1, pass_bot=True)
+    bot.register_message_handler(get_dispatch_point, text_equals=main_menu.make_calculation_button, pass_bot=True)
     bot.register_callback_query_handler(concrete_type_button_handler, func=dummy_true, prefix="type_", pass_bot=True)
     bot.register_callback_query_handler(concrete_button_handler, func=dummy_true, prefix="concrete_", pass_bot=True)
     bot.register_callback_query_handler(is_correct_geo, func=dummy_true, prefix="geo_", pass_bot=True)
