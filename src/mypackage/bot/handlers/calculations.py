@@ -309,10 +309,32 @@ def confirm_order(
                          .main_menu_keyboard(is_admin=user_orders[call.from_user.id].user.is_admin))
 
 
+def back_to_menu(
+        message: Message,
+        bot: TeleBot,
+        buttons: ButtonsConfig,
+        google_sheet_api: GoogleSheetAPI,
+        google_maps_api: GoogleMapsAPI,
+        db_adapter: DBAdapter,
+        logger: Logger,
+        **kwargs):
+    if message.text == main_menu.cancel_button:
+        if message.from_user.id in user_orders.keys():
+            del user_orders[message.from_user.id]
+            bot.send_message(message.chat.id, admin_panel.back_to_main_menu_message,
+                             reply_markup=keyboards.main_menu_keyboard(
+                                 user_orders[message.from_user.id].user.is_admin))
+        else:
+            bot.send_message(message.chat.id, admin_panel.back_to_main_menu_message,
+                             reply_markup=keyboards.main_menu_keyboard(
+                                 db_adapter.get_user(message.from_user.id).is_admin))
+
+
 def register_handlers(bot: TeleBot):
     bot.register_message_handler(get_dispatch_point, commands=['calculate'], is_admin=True, pass_bot=True)
     bot.register_message_handler(refresh, commands=['refresh'], pass_bot=True)
     bot.register_message_handler(get_dispatch_point, text_equals=main_menu.make_calculation_button, pass_bot=True)
+    bot.register_message_handler(back_to_menu, text_equals=main_menu.cancel_button, pass_bot=True)
     bot.register_callback_query_handler(concrete_type_button_handler, func=dummy_true, prefix="type_", pass_bot=True)
     bot.register_callback_query_handler(concrete_button_handler, func=dummy_true, prefix="concrete_", pass_bot=True)
     bot.register_callback_query_handler(is_correct_geo, func=dummy_true, prefix="geo_", pass_bot=True)
