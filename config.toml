@@ -1,6 +1,6 @@
 [bot]
 owner_tg_id = 12345678
-admins = [707897264]
+admins = [707897264, 89791483]
 token = "token"
 drop_pending = true
 use_webhook = false
