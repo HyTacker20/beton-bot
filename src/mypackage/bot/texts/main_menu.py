@@ -1,4 +1,6 @@
 welcome_message = "Вітаю!"
 
-button_1 = "Зробити розрахунок"
+make_calculation_button = "Зробити розрахунок"
 admin_button = "Адмінка"
+
+cancel_button = "❌Скасувати"

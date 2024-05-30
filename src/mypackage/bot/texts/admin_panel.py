@@ -1,7 +1,7 @@
 make_mailing_button = "❌Почати розсилку"
 edit_texts_button = "❌Редагувати дані"
 statistics_button = "❌Статистика"
-create_password_button = "❌Створити пароль"  # TODO: ???
+create_password_button = "❌Створити пароль"
 users_discount_button = "Знижки користувачів"
 back_to_main_menu_button = "Головне меню"
 
