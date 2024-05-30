@@ -58,7 +58,7 @@ def is_admin(session: Session, tg_user_id: int) -> bool | None:
 
 
 def get_all(session: Session, offset=None, limit=None) -> Sequence[Row[tuple[User]]]:
-    query = select(User).where(User.is_admin == False)
+    query = select(User)
     if offset:
         query = query.offset(offset)
     if limit:
@@ -70,7 +70,7 @@ def get_all(session: Session, offset=None, limit=None) -> Sequence[Row[tuple[Use
 
 def get_all_count(session: Session) -> int:
     user_cnt = session.execute(
-        select(func.count(User.id)).where(User.is_admin == False)
+        select(func.count(User.id))
     ).first()
     return user_cnt[0]
 
