@@ -8,6 +8,9 @@ from ..db.dto import OrderDTO
 
 all_content_types = content_type_media + content_type_service
 
+MIN_MIXER_AMOUNT = 7
+MAX_TRACK_AMOUNT = 2.5
+
 
 # Can be used to fill the required func parameter in the TeleBot.register_callback_query_handler method
 def dummy_true(*args, **kwargs):
@@ -21,38 +24,52 @@ def calculate_concrete_cost(price: float, amount: int, discount=0):
     return cost
 
 
-def calculate_delivery_cost(price_list: list[str], distance: float, amount: int = 0, discount=0) -> float:
+def calculate_delivery_cost(concrete_type: str, price_list: list[str], distance: float,
+                            amount: int = 0) -> float:
     """
     Calculates the delivery cost of concrete mix.
 
-    :param price_list: list of prices per km for delivery
-    :param distance: delivery distance in meters
-    :param amount: volume of concrete ordered in m³
-    :param discount: discount in percentage (default is 0)
-    :return: total delivery cost
+    :param concrete_type:
+    :param price_list: list of prices per km for delivery;
+    :param distance: delivery distance in meters;
+    :param amount: volume of concrete ordered in m³;
+    :return: total delivery cost;
     """
 
     # Convert distance from meters to kilometers and round down
     kilometres = int(round(distance / 1000, 2))
 
-    # Minimum amount of concrete for calculation
-    if not amount:
-        amount = 1
-    elif amount < 7:
-        amount = 7
+    if concrete_type in ["P1", "P2"]:
+        if amount < MAX_TRACK_AMOUNT:
+            amount = MAX_TRACK_AMOUNT
 
-    # Calculate delivery cost
-    if kilometres <= 50:
-        cost = float(price_list[kilometres - 1]) * amount
+        deliveries_count = int(math.ceil(amount / MAX_TRACK_AMOUNT))
+        print(deliveries_count)
+
+        # Calculate delivery cost
+        if kilometres <= 50:
+            cost = float(price_list[kilometres - 1]) * deliveries_count
+        else:
+            base_cost = float(price_list[-2]) * deliveries_count
+            extra_cost_per_km = float(price_list[-1]) * deliveries_count
+            extra_distance = kilometres - 50
+            cost = base_cost + extra_cost_per_km * extra_distance
+
     else:
-        base_cost = float(price_list[-2]) * amount
-        extra_cost_per_km = float(price_list[-1]) * amount
-        extra_distance = kilometres - 50
-        cost = base_cost + extra_cost_per_km * extra_distance
+        # Minimum amount of concrete for calculation
+        if not amount:
+            amount = 1
+        elif amount < MIN_MIXER_AMOUNT:
+            amount = MIN_MIXER_AMOUNT
 
-    # Apply discount if any
-    if discount:
-        cost -= cost * discount / 100
+        # Calculate delivery cost
+        if kilometres <= 50:
+            cost = float(price_list[kilometres - 1]) * amount
+        else:
+            base_cost = float(price_list[-2]) * amount
+            extra_cost_per_km = float(price_list[-1]) * amount
+            extra_distance = kilometres - 50
+            cost = base_cost + extra_cost_per_km * extra_distance
 
     return round(cost, 2)
 

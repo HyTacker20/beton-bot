@@ -82,6 +82,7 @@ class DistanceDTO:
 @dataclass
 class ConcreteDTO:
     title: str
+    type_: str
     price: float
 
 
