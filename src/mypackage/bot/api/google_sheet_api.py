@@ -19,7 +19,8 @@ class GoogleSheetAPI:
         self.dispatch_points_set: set | None = None
         self.concrete_data: ConcreteDataDTO | None = None
         self.last_update: datetime.datetime | None = None
-        self.delivery_price_data = []
+        self.delivery_mixer_price_data = []
+        self.delivery_truck_price_data = []
 
         self.gc = gspread.service_account(json_url)
         self.sh = self.gc.open_by_url(sh_url)
@@ -39,7 +40,7 @@ class GoogleSheetAPI:
 
     def remove_data(self):
         self.concrete_data = None
-        self.delivery_price_data = None
+        self.delivery_mixer_price_data = None
 
     def get_dispatch_points(self) -> set[DispatchPointDTO]:
         worksheet = self.sh.worksheet("dispatch_points")
@@ -77,11 +78,13 @@ class GoogleSheetAPI:
 
             worksheet = self.sh.worksheet("concrete_types")
             for concrete_type_number in range(1, 6):
-                data = worksheet.get(f"A{concrete_type_number*2-1}:G{concrete_type_number*2}")
+                data = worksheet.get(f"A{concrete_type_number * 2 - 1}:G{concrete_type_number * 2}")
                 concretes = []
+
                 for el in range(1, 7):
-                    if el < len(data[0])-1:
-                        concrete = ConcreteDTO(data[0][el], float(data[1][el].replace(",", ".")))
+                    if el < len(data[0]) - 1:
+                        concrete = ConcreteDTO(data[0][el], f"P{concrete_type_number}",
+                                               float(data[1][el].replace(",", ".")))
                         concretes.append(concrete)
                     else:
                         break
@@ -93,11 +96,26 @@ class GoogleSheetAPI:
 
         return self.concrete_data
 
-    def get_delivery_price_list(self):
-        if not self.delivery_price_data:
-            worksheet = self.sh.worksheet("delivery_prices")
-            self.delivery_price_data = worksheet.col_values(1)
-        return self.delivery_price_data
+    def get_delivery_price_list(self, concrete_type: str):
+        if concrete_type in ["P1", "P2"]:
+            delivery_type = "Самоскид"
+        else:
+            delivery_type = "Автобетонозмішувач"
 
+        if delivery_type == "Самоскид":
+            if not self.delivery_truck_price_data:
+                worksheet = self.sh.worksheet("delivery_prices")
+                data_col_index = worksheet.row_values(1).index(delivery_type) + 1
+                self.delivery_truck_price_data = worksheet.col_values(data_col_index)[1:]
 
+            return self.delivery_truck_price_data
 
+        elif delivery_type == "Автобетонозмішувач":
+            if not self.delivery_mixer_price_data:
+                worksheet = self.sh.worksheet("delivery_prices")
+                data_col_index = worksheet.row_values(1).index(delivery_type) + 1
+
+                self.delivery_mixer_price_data = worksheet.col_values(data_col_index)[1:]
+            return self.delivery_mixer_price_data
+
+        return []
