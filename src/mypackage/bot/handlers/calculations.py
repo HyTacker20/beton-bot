@@ -260,10 +260,10 @@ def get_concrete_amount(
         distance=order_dto.distance.distance_metres,
         amount=order_dto.amount)
 
-    msg = create_order_message(order_dto, google_sheet_api)
+    msg = create_order_message(order_dto)
 
     bot.send_message(message.chat.id, msg, parse_mode="HTML",
-                     reply_markup=create_inline_keyboard(["Замовити"], prefix="order_"))
+                     reply_markup=create_inline_keyboard(["Замовити", "Скасувати"], prefix="order_"))
 
 
 def confirm_order(
@@ -282,6 +282,11 @@ def confirm_order(
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                       reply_markup=keyboards.create_inline_keyboard(["Підтвердити", "Скасувати"],
                                                                                     prefix="order_"))
+    elif answer == "Скасувати":
+        msg = texts.order_canceled
+        bot.send_message(call.message.chat.id, msg, reply_markup=keyboards
+                         .main_menu_keyboard(is_admin=user_orders[call.from_user.id].user.is_admin))
+        return
 
     else:
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
