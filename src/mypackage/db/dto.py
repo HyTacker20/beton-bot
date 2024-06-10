@@ -1,8 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, List
 
+from sqlalchemy import UniqueConstraint
 from telebot.types import Message
+
+from src.mypackage.bot import texts
 
 
 @dataclass
@@ -28,14 +31,65 @@ class DispatchPointDTO(CoordsDTO):
 
 
 @dataclass
+class ProducerDTO:
+    title: str
+    id: int | None = None
+
+    dispatch_points: List[DispatchPointDTO] | None = None
+
+
+@dataclass
+class UserDiscountDTO:
+    id: int | None = None
+    user_id: int | None = None
+    producer_id: int | None = None
+
+    concrete_discount: Optional[int] = 0
+    delivery_discount: Optional[int] = 0
+
+    concrete_discount_vat: Optional[int] = 0
+    delivery_discount_vat: Optional[int] = 0
+
+    producer: Optional[ProducerDTO] = None
+
+    def get_concrete_discount(self, payment_type: str):
+        if payment_type == texts.cash_payment:
+            return self.concrete_discount
+        elif payment_type == texts.cashless_payment:
+            return self.concrete_discount_vat
+        return 0
+
+    def get_delivery_discount(self, payment_type: str):
+        if payment_type == texts.cashless_payment:
+            return self.delivery_discount
+        elif payment_type == texts.cashless_payment:
+            return self.delivery_discount_vat
+        return 0
+
+
+@dataclass
+class ItemDTO:
+    id: int
+    title: str
+    category_id: int
+
+
+@dataclass
+class CategoryDTO:
+    id: int
+    title: str
+    parent_id: Optional[int] = None
+    subcategories: List['CategoryDTO'] = field(default_factory=list)
+    items: List[ItemDTO] = field(default_factory=list)
+
+
+@dataclass
 class NewUserDTO:
     first_name: str
     tg_user_id: int
     tg_chat_id: int
 
     is_admin: Optional[bool] = False
-    concrete_discount: Optional[int] = 0
-    delivery_discount: Optional[int] = 0
 
     last_name: Optional[str] = None
     tg_username: Optional[str] = None
@@ -62,10 +116,23 @@ class UserDTO(NewUserDTO):
 
     phone: Optional[str] = None
 
+    discounts: List[UserDiscountDTO] = None
     dispatch_point: Optional[DispatchPointDTO] = None
     dispatch_point_id: Optional[int] = None
 
     register_time: Optional[datetime] = None
+
+    def get_producer_discounts(self, producer_title: str):
+        for discount in self.discounts:
+            if discount.producer.title == producer_title:
+                return discount
+
+        return UserDiscountDTO(
+            concrete_discount=0,
+            delivery_discount=0,
+            concrete_discount_vat=0,
+            delivery_discount_vat=0
+        )
 
 
 @dataclass
@@ -84,6 +151,7 @@ class ConcreteDTO:
     title: str
     type_: str
     price: float
+    producer: str | None = None
 
 
 @dataclass
@@ -122,6 +190,8 @@ class ConcreteDataDTO:
 @dataclass
 class OrderDTO:
     user: UserDTO
+    payment_type: str = texts.cash_payment
+    producer: str | None = None
     dispatch_point: DispatchPointDTO | None = None
     user_location: UserLocationDTO | None = None
     distance: DistanceDTO | None = None
@@ -131,8 +201,6 @@ class OrderDTO:
     concrete_cost: float | None = None
     delivery_price: float | None = None
 
-    # def subtract_delivery_discount(self, discount: int):
-    #     self.delivery_cost -= self.delivery_cost * discount / 100
     @property
     def delivery_cost_with_discount(self):
         return self.delivery_cost - self.get_delivery_discount()
@@ -142,7 +210,13 @@ class OrderDTO:
         return self.concrete_cost - self.get_concrete_discount()
 
     def get_concrete_discount(self):
-        return self.concrete_cost * self.user.concrete_discount / 100
+        for discount in self.user.discounts:
+            if discount.producer.title == self.producer:
+                return self.concrete_cost * discount.concrete_discount / 100
+        return 0
 
     def get_delivery_discount(self):
-        return self.delivery_cost * self.user.delivery_discount / 100
+        for discount in self.user.discounts:
+            if discount.producer.title == self.producer:
+                return self.delivery_cost * discount.delivery_discount / 100
+        return 0
