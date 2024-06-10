@@ -65,6 +65,8 @@ def start_handler(
                         f'{message.from_user.first_name} {message.from_user.id}, '
                         f'{message.chat.id}, {message.from_user.username}'
                     )
+        else:
+            print(user.__repr__())
 
         bot.send_message(message.chat.id, welcome_message,
                          reply_markup=keyboards.main_menu_keyboard(user.is_admin if user else False))
