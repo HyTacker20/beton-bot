@@ -59,7 +59,7 @@ class DBConfig:
     port: int  # DBMS port
     user: str  # DBMS user
     password: str  # DBMS user password
-    database: str  # Database name
+    database: str  # Database title
     logger: LoggerConfig  # Logger config for database
 
 
