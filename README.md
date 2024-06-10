@@ -59,7 +59,7 @@ gunicorn 'mypackage:webhook_app()' --bind=$HOST:$PORT --workers-class=$WORKERS_C
 ## Uninstall
 
 ```bash
-pip uninstall <your-package-name>
+pip uninstall <your-package-title>
 ```
 
 Beware that `mypackage` is not the package name, but the name of the module,
