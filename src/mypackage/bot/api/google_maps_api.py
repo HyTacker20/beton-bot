@@ -12,7 +12,7 @@ from ...db.dto import UserLocationDTO, DispatchPointDTO, DistanceDTO
 
 
 class GoogleMapsAPI:
-    def __init__(self, api_key="AIzaSyAAzCEbUoms-CWlvPOfHxqQPWgqJu55DYQ"):
+    def __init__(self, api_key):
         self.gmaps = googlemaps.Client(api_key)
 
     def _get_distance(self, _from: Tuple[float, float], to: Tuple[float, float], debug=False):
@@ -36,8 +36,10 @@ class GoogleMapsAPI:
 
         user_location = None
         if result:
+            address = (", ".join(component["long_name"] for component in result[0]["address_components"]))
             user_location = UserLocationDTO(
-                address=result[0]["formatted_address"],
+                # address=result[0]["formatted_address"],
+                address=address,
                 latitude=result[0]["geometry"]["location"]["lat"],
                 longitude=result[0]["geometry"]["location"]["lng"]
             )
@@ -63,11 +65,10 @@ class GoogleMapsAPI:
                           coords: tuple[float, float]) -> Tuple[DispatchPointDTO, DistanceDTO]:
         distances = {}
         for dp in dp_list:
-            # result = distance_matrix(self.gmaps, coords, dp.coords)["rows"][0]["elements"][0]["distance"]["value"]
             result = self._get_distance(coords, dp.coords)
             distances[result.distance_metres] = (dp, result)
 
-        print(distances.keys())
         min_distance = min(distances.keys())
         return distances[min_distance]
+
 
