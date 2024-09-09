@@ -19,12 +19,12 @@
     "default": {
         "adaptix": {
             "hashes": [
-                "sha256:1924d7a0aad387a4677f1386cf5f3684bc6c9272a22234cc7440dddedac3faf7",
-                "sha256:cfe6c420b08942f1c7531ef43c5034ec33c83b8a27fdad4ec9636f4f9002d767"
+                "sha256:5e4426c33089636704d551339e1d4307afec48abf33f19639bee4411c2fde9b3",
+                "sha256:dcde98ff7ce7dd7c99dcfeabbbbe22219deb463eba30861502e036c235c11c57"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.8'",
-            "version": "==3.0.0b6"
+            "markers": "python_version >= '3.9'",
+            "version": "==3.0.0b8"
         },
         "alembic": {
             "hashes": [
